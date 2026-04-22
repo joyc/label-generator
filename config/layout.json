@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "template_size": [591, 354],
+    "description": "坐标基于 591x354 像素模板。所有文字使用 anchor='mm'（中心锚点），xy 是字符中心坐标。",
+    "font": "fonts/NotoSansCJK-Regular.otf",
+    "bold_font": "fonts/NotoSansCJK-Bold.otf"
+  },
+
+  "size": {
+    "type": "text",
+    "xy": [190, 114],
+    "font_size": 64,
+    "anchor": "rt",
+    "color": "#000000",
+    "bold": true
+  },
+
+  "category": {
+    "type": "text",
+    "xy": [304, 138],
+    "font_size": 48,
+    "anchor": "mm",
+    "color": "#000000",
+    "bold": true,
+    "max_width": 150
+  },
+
+  "sku_code": {
+    "type": "text",
+    "xy": [236, 238],
+    "font_size": 22,
+    "anchor": "mm",
+    "color": "#000000"
+  },
+
+  "color_name": {
+    "type": "text",
+    "xy": [235, 272],
+    "font_size": 22,
+    "anchor": "mm",
+    "color": "#000000",
+    "max_width": 320
+  },
+
+  "jan": {
+    "type": "barcode",
+    "format": "ean13",
+    "xy": [498, 214],
+    "anchor": "mm",
+    "width": 220,
+    "height": 140,
+    "rotation": 90,
+    "show_text": true
+  }
+}
