@@ -2,6 +2,8 @@
 
 Batch apparel label PNG generator. Reads a CSV/Excel file and outputs one print-ready PNG per row, overlaying text and a JAN-13 barcode onto a template image.
 
+![GUI Version](./lable-generator.png)
+
 ## Requirements
 
 - Python 3.11+

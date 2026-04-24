@@ -1,0 +1,13 @@
+{
+  "loopLimits": {
+    "default": 5,
+    "speed": 3,
+    "deep": 10,
+    "autopilot": 5,
+    "ralph": -1
+  },
+  "stateDir": ".oma/state",
+  "memoryDir": ".oma/memory",
+  "rulesDir": ".oma/rules",
+  "hooksDir": ".oma/hooks"
+}

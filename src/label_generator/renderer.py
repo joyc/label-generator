@@ -137,7 +137,10 @@ class LabelRenderer:
         spec: dict,
         xy: tuple,
     ) -> None:
-        from .barcode_gen import normalize_jan, render_barcode
+        try:
+            from .barcode_gen import normalize_jan, render_barcode
+        except ImportError:
+            from barcode_gen import normalize_jan, render_barcode
 
         width = spec.get("width", 300)
         height = spec.get("height", 80)
