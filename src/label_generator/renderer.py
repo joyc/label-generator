@@ -65,8 +65,20 @@ class LabelRenderer:
         if not fp.exists():
             raise FileNotFoundError(f"Font not found: {fp.resolve()}")
 
-        self._template = Image.open(tp).convert("RGBA")
         self._layout = layout
+        self._scale = float(layout.get("_meta", {}).get("scale_factor", 1.0))
+        if self._scale <= 0:
+            self._scale = 1.0
+
+        self._template = Image.open(tp).convert("RGBA")
+        if self._scale != 1.0:
+            resample_filter = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS
+            new_size = (
+                int(round(self._template.width * self._scale)),
+                int(round(self._template.height * self._scale)),
+            )
+            self._template = self._template.resize(new_size, resample_filter)
+
         self._font_path = str(fp)
 
         bp = Path(bold_font_path) if bold_font_path else None
@@ -109,22 +121,24 @@ class LabelRenderer:
         xy: tuple,
     ) -> None:
         use_bold = spec.get("bold", False)
+        font_size = int(round(spec.get("font_size", 24) * self._scale))
         font = (
-            self._bold_font(spec.get("font_size", 24))
+            self._bold_font(font_size)
             if use_bold
-            else self._font(spec.get("font_size", 24))
+            else self._font(font_size)
         )
         color = spec.get("color", "#000000")
         anchor = spec.get("anchor", "lt")
         max_width = spec.get("max_width")
 
         if max_width:
-            lines = _wrap_text(font, value, max_width)
+            scaled_max_width = max_width * self._scale
+            lines = _wrap_text(font, value, scaled_max_width)
         else:
             lines = [value]
 
-        line_height = font.getbbox("Ag")[3] + 4
-        x, y = xy
+        line_height = font.getbbox("Ag")[3] + int(round(4 * self._scale))
+        x, y = xy[0] * self._scale, xy[1] * self._scale
 
         for line in lines:
             draw.text((x, y), line, font=font, fill=color, anchor=anchor)
@@ -142,8 +156,8 @@ class LabelRenderer:
         except ImportError:
             from barcode_gen import normalize_jan, render_barcode
 
-        width = spec.get("width", 300)
-        height = spec.get("height", 80)
+        width = int(round(spec.get("width", 300) * self._scale))
+        height = int(round(spec.get("height", 80) * self._scale))
         rotation = spec.get("rotation", 0)
         anchor = spec.get("anchor", "lt")
 
@@ -156,35 +170,41 @@ class LabelRenderer:
             print(f"  [barcode] skip — {e}")
             return
 
+        # Build combined image: bars + optional text below
         if show_text:
-            font_size = max(8, height // 10)
+            text_font_size = spec.get("text_font_size", max(8, height // 10))
+            text_padding_top = spec.get("text_padding_top", 4)
+            text_padding_bottom = spec.get("text_padding_bottom", 2)
+
+            font_size = int(round(text_font_size * self._scale))
             font = self._font(font_size)
-            text_h = font.getbbox("0")[3] + 4
+            text_h = font.getbbox("0")[3] + int(round(text_padding_top * self._scale))
             bc_img = Image.new("RGB", (width, height + text_h), "white")
             bc_img.paste(bars, (0, 0))
             draw = ImageDraw.Draw(bc_img)
-            digits = jan13  # 13 chars, evenly spaced left-to-right
+            digits = jan13
             step = width / (len(digits) - 1)
             for i, ch in enumerate(digits):
-                x = round(i * step)
+                x_char = round(i * step)
                 if i == 0:
                     a = "lt"
                 elif i == len(digits) - 1:
                     a = "rt"
                 else:
                     a = "mt"
-                draw.text((x, height + 2), ch, font=font, fill="black", anchor=a)
+                draw.text((x_char, height + int(round(text_padding_bottom * self._scale))), ch, font=font, fill="black", anchor=a)
         else:
             bc_img = bars
 
+        # Rotate the combined image (bars + text together)
         if rotation:
             bc_img = bc_img.rotate(rotation, expand=True)
 
         bc_img = bc_img.convert("RGBA")
         bw, bh = bc_img.size
-        x, y = int(xy[0]), int(xy[1])
 
-        # Translate anchor to top-left paste coordinate
+        # Compute paste position
+        x, y = int(round(xy[0] * self._scale)), int(round(xy[1] * self._scale))
         if anchor == "mm":
             x -= bw // 2
             y -= bh // 2
